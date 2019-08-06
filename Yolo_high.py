@@ -6,7 +6,8 @@ def get_vehicle_imgs(frame, below_left=750, below_right=600):
     :arg below_left: the line to cross by a vehicle on the left half to be considered
          below_right: the line to cross by a vehicle on the right half to be considered
     :returns vehicle_imgs: list of vehicle images as numpy arrays
-             vbboxes: the vehicles' bounding boxes w.r.t. the frame supplied"""
+             vbboxes: the vehicles' bounding boxes w.r.t. the frame supplied
+             bbox: the actual bounding box image"""
 
     img, factor = yolo.resize_image(frame, yolo.imgsize)
 
@@ -15,7 +16,7 @@ def get_vehicle_imgs(frame, below_left=750, below_right=600):
 
     bboxes = yolo.post_process_predictions(preds)
     if len(bboxes) == 0:  # if no prediction is made
-        return []
+        return [], [], []
 
     bboxes = yolo.select_objects(bboxes, indices=yolo.vehicles)
     bboxes = yolo.refactor_bboxes(bboxes, factors=[factor])
@@ -26,4 +27,6 @@ def get_vehicle_imgs(frame, below_left=750, below_right=600):
         vehicle_imgs, vbboxes = yolo.get_bbox_image(
             frame, bbox, return_bbox=True)
 
-        return vehicle_imgs, vbboxes
+        return vehicle_imgs, vbboxes, bbox
+
+    else: return [], [], []

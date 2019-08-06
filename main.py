@@ -6,6 +6,7 @@ import numpy as np
 import time
 import torch
 import torchvision.transforms as transforms
+import Yolo_high as yolo_high
 from OCR.predictor.model import *
 from OCR.predictor.predict import *
 from OCR.utilities.character_image_assembler import *
@@ -84,24 +85,11 @@ while cap.isOpened():
         continue
 
     # TODO: Yolo
-    # frame = cv2.resize(frame, None,fx=0.5, fy=0.5)
-    img, factor = yolo.resize_image(frame, yolo.imgsize)
-
-    imgs = yolo.prepare_tensor_image(np.array([img]))
-    preds = yolo.predict_images(imgs)
-
-    bboxes = yolo.post_process_predictions(preds)
-    if len(bboxes) == 0:  # if no prediction is made
-        print('no prediction found')
+    vehicle_imgs, vbbox, bbox = yolo_high.get_vehicle_imgs(frame,750,600)
+    if len(vehicle_imgs) == 0:
         continue
-    bboxes = yolo.select_objects(bboxes, indices=yolo.vehicles)
-    bboxes = yolo.refactor_bboxes(bboxes, factors=[factor])
-    bboxes = yolo.select_boxes_below(bboxes, below=750, below1=600)
-    bbox = bboxes[0]
-    # print("num_vehicles = ", len(bbox))
-    if len(bbox) > 0:  # vehicle has been detected
-        vehicle_imgs, vbbox = yolo.get_bbox_image(
-            frame, bbox, return_bbox=True)
+    else:
+
 
         # % of height heuristic
         # print(vehicle_imgs[0].shape)
