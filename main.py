@@ -1,5 +1,6 @@
 import my_yolov3_api as yolo
 import my_localization_api as localizer
+import math
 import cv2
 import numpy as np
 import time
@@ -14,6 +15,16 @@ import my_segmentation_api as segment
 import os
 
 I = 1080
+PROXIMITY_PARAM = 3 # the number of pixel distance to consider the two pixels to be
+                    # in a neighborhood
+
+SLIDING_BUFFER = [] # holds a succession of frames that slides with the current frame in the center
+SLIDING_BUFFER_SIZE = 3
+SLIDING_BUFFER_2 = [] # holds the second half of the frames
+OPTIMAL_FRAME_FOUND = False # flag that indicates the optimal frame condition is found
+FRAMES_TO_RECORD = 0
+CURRENT_OCR_VALUES = [] # stores the values for all the frames in the sliding window
+                        # given the an optimal frame is identified
 
 video_file = os.path.join(os.getcwd(), 'video', '2.MOV')
 
@@ -24,7 +35,7 @@ cap = cv2.VideoCapture(video_file)
 # print(members)
 # exit()
 # Define the codec and create VideoWriter object
-
+current_frame = None
 frames = -1
 # TODO: yolo
 yolo.load_model()
@@ -53,6 +64,22 @@ while cap.isOpened():
 
     frames += 1
 
+
+    # initialize the buffer
+    if frames < math.floor(SLIDING_BUFFER_SIZE / 2): # when the first-half-buffer is not full yet
+        SLIDING_BUFFER.append(frame)
+    else: # later on
+        SLIDING_BUFFER.pop(0) # remove the oldest frame
+        SLIDING_BUFFER.append(frame)# add the newest frame
+        # the above ensures that the sliding buffer is always half.. filled later on
+    if OPTIMAL_FRAME_FOUND:
+        FRAMES_TO_RECORD = math.floor(SLIDING_BUFFER_SIZE / 2)
+        OPTIMAL_FRAME_FOUND = False
+
+    if FRAMES_TO_RECORD > 0: # turns true for the first optimal frame
+        SLIDING_BUFFER_2.append(frame)
+        FRAMES_TO_RECORD -= 1
+
     if frames % 7 != 0:
         continue
 
@@ -75,18 +102,37 @@ while cap.isOpened():
     if len(bbox) > 0:  # vehicle has been detected
         vehicle_imgs, vbbox = yolo.get_bbox_image(
             frame, bbox, return_bbox=True)
+
+        # % of height heuristic
         # print(vehicle_imgs[0].shape)
-        MAXIMUM_HEIGHT = 65 / 100 * I
-        flag_vbbox_invalid = 0
+        # MAXIMUM_HEIGHT = 65 / 100 * I
+        # flag_vbbox_invalid = 0
+        # for vbbox_i in vbbox:
+        #
+        #     height_of_vehicle = vbbox_i[3] - vbbox_i[1]
+        #     if height_of_vehicle > MAXIMUM_HEIGHT:
+        #         flag_vbbox_invalid = 1
+        #
+        # if flag_vbbox_invalid == 1:
+        #     print('skipped')
+        #     continue
+        flag_invalid = 0
         for vbbox_i in vbbox:
+            x1, y1, x2, y2 = tuple(vbbox_i)
+            if x1 <= PROXIMITY_PARAM or abs(x2 - frame.shape[1]) <= PROXIMITY_PARAM + 10:
+                if FRAMES_TO_RECORD == 0:
+                    OPTIMAL_FRAME_FOUND = True
+            elif y1 <= PROXIMITY_PARAM or abs(y2 - frame.shape[0]) <= PROXIMITY_PARAM + 10:
+                if FRAMES_TO_RECORD == 0:
+                    OPTIMAL_FRAME_FOUND = True
+            else:
+                flag_invalid = 1
+                OPTIMAL_FRAME_FOUND = False
+                break
 
-            height_of_vehicle = vbbox_i[3] - vbbox_i[1]
-            if height_of_vehicle > MAXIMUM_HEIGHT:
-                flag_vbbox_invalid = 1
-
-        if flag_vbbox_invalid == 1:
-            print('skipped')
+        if flag_invalid == 1:
             continue
+
 
         lp_bbox = localizer.predict_bbox(vehicle_imgs)
 
