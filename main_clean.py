@@ -24,10 +24,19 @@ def main():
     while cap.isOpened():
         ret, frame = cap.read()
 
+
         # perform object detection
         vehicle_imgs, vbbox, bbox = yolo.get_vehicle_imgs(frame, 750, 700)
 
-        if len(vehicle_imgs) == 0: # if no vehicle was detected
+        # height to width heuristic to remove partial images
+        for vehicle_img in vehicle_imgs:
+            if vehicle_img.shape[0] > 1.5* vehicle_img.shape[1]:
+
+                vehicle_imgs.remove(vehicle_img)
+
+        if len(vehicle_imgs) == 0: # if no vehicle was detected, just skip
+            frame_no += 1
+            cv2.imshow('prediction',frame)
             continue
 
         # perform license plate localization
