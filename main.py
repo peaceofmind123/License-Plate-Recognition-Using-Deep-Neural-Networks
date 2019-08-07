@@ -6,6 +6,7 @@ import numpy as np
 import time
 import torch
 import torchvision.transforms as transforms
+import localizer_high
 import Yolo_high as yolo_high
 from OCR.predictor.model import *
 from OCR.predictor.predict import *
@@ -71,7 +72,7 @@ while cap.isOpened():
         SLIDING_BUFFER.append(frame)
     else: # later on
         SLIDING_BUFFER.pop(0) # remove the oldest frame
-        SLIDING_BUFFER.append(frame)# add the newest frame
+        SLIDING_BUFFER.append(frame) # add the newest frame
         # the above ensures that the sliding buffer is always half.. filled later on
     if OPTIMAL_FRAME_FOUND:
         FRAMES_TO_RECORD = math.floor(SLIDING_BUFFER_SIZE / 2)
@@ -121,17 +122,13 @@ while cap.isOpened():
         if flag_invalid == 1:
             continue
 
+        lp_imgs, lp_bbox, frame = localizer_high.predict_license_plate(vehicle_imgs,frame,vbbox)
 
-        lp_bbox = localizer.predict_bbox(vehicle_imgs)
-
-        # start = localizer.save_lp_box_only(vehicle_imgs, lp_bbox, start)
-        lp_imgs = localizer.get_transformed_lp_bbox_only(vehicle_imgs, lp_bbox)
 
         cv2.imwrite(os.path.join(os.getcwd(), 'lp_detection',
                                  f'${counter1}.png'), lp_imgs[0])
         # print(len(lp_imgs), lp_imgs[0].shape)
         # print(len(lp_bbox))
-        frame = localizer.draw_lp_box_onframe(frame, vbbox, lp_bbox)
         # localizer.save_lp_box_only(vehicle_imgs, lp_imgs, 0)
         counter1 += 1
         # performing ocr on the detected license plate
