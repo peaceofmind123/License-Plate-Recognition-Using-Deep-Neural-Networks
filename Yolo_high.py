@@ -1,6 +1,13 @@
 import my_yolov3_api as yolo
 import numpy as np
 
+
+def initialize_model():
+    yolo.load_model()
+
+def draw_bbox(frame, bboxes):
+    return yolo.draw_bbox(frame,bboxes)
+
 def get_vehicle_imgs(frame, below_left=750, below_right=600):
     """Get a list of vehicle images from a given frame
     :arg below_left: the line to cross by a vehicle on the left half to be considered

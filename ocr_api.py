@@ -53,6 +53,8 @@ def predict_ocr(img):
     filtered_img = filtered_img / color * 255
 
     #section 4
+    if len(bbox_list) == 0:
+        return None
     bbox_list_only_characters = bbox_list.copy()
     bbox_list_only_characters = np.array(bbox_list_only_characters)
     bbox_list_only_characters[:, 2] = bbox_list_only_characters[:, 0] + bbox_list_only_characters[:, 2]

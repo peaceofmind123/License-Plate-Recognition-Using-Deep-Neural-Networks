@@ -1,6 +1,8 @@
 import numpy as np
 import my_localization_api as localizer
 
+def initialize_model():
+    localizer.load_model()
 
 def predict_license_plate(vehicle_imgs, frame=None, vbboxes=None):
     """Predicts a license plate image given cropped vehicle images
