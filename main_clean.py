@@ -12,11 +12,11 @@ VIDEO_FILENAME = '1.MOV'
 
 def main():
     frame_no = 0
-
+    id_for_new_vehicle = 0
     # initialization
     yolo.initialize_model()
     localizer.initialize_model()
-
+    tracked_vehicles_info = {}
     # load video
     video_file_path = os.path.join(os.getcwd(), 'video',VIDEO_FILENAME)
     cap = cv2.VideoCapture(video_file_path)
@@ -36,8 +36,9 @@ def main():
         if len(vehicle_imgs) == 0 or len(vbbox) == 0 or len(bbox) == 0:
             continue
         # perform object tracking
-        tracked_vehicles_info, id_for_new_vehicle = obj_tracker.track_vehicle(obj_tracker.get_bbox_without_class(bbox))
-
+        tracked_vehicles_info, id_for_new_vehicle = obj_tracker.track_vehicle(
+            obj_tracker.get_bbox_without_class(bbox))
+        print(id_for_new_vehicle)
         # create or update the vehicles tracked till now
         for key in tracked_vehicles_info.keys():
             _, centroid_x, centroid_y = tracked_vehicles_info[key]
@@ -86,10 +87,15 @@ def main():
 
         # processing done, time for outputs
         # print(frame_no, ocr_outputs_this_frame)
-        print(tracked_vehicles[0].license_number_predictions)
+        l = len(tracked_vehicles)
+        print(tracked_vehicles[l-1].license_number_predictions)
         # create the frame to display
         frame = yolo.draw_bbox(frame, bbox)
-
+        for v in tracked_vehicles:
+            if v.id in vehicle_ids_this_frame:
+                cx = int(v.current_bounding_box_centroid[0])
+                cy = int(v.current_bounding_box_centroid[1])
+                frame = cv2.putText(frame,f'{v.id}',(cx,cy),cv2.FONT_HERSHEY_COMPLEX,4,(0,255,0),4)
         # resize the frame for display
         frame = cv2.resize(frame, (1080,700))
         cv2.imshow("prediction", frame)
