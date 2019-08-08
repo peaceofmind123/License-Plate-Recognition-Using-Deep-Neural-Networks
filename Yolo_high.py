@@ -14,7 +14,7 @@ def get_vehicle_imgs(frame, below_left=750, below_right=600):
          below_right: the line to cross by a vehicle on the right half to be considered
     :returns vehicle_imgs: list of vehicle images as numpy arrays
              vbboxes: the vehicles' bounding boxes w.r.t. the frame supplied
-             bbox: the actual bounding box image"""
+             bbox: """
 
     img, factor = yolo.resize_image(frame, yolo.imgsize)
 

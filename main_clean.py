@@ -5,6 +5,8 @@ import sys
 import cv2
 import numpy
 import os
+import object_tracker_api as obj_tracker
+from Vehicle import Vehicle
 # constants
 VIDEO_FILENAME = '1.MOV'
 
@@ -19,7 +21,9 @@ def main():
     video_file_path = os.path.join(os.getcwd(), 'video',VIDEO_FILENAME)
     cap = cv2.VideoCapture(video_file_path)
 
-
+    tracked_vehicle_ids = []
+    current_tracked_id = 0
+    tracked_vehicles = [] # stores the actual vehicle object
     # main loop
     while cap.isOpened():
         ret, frame = cap.read()
@@ -27,6 +31,23 @@ def main():
 
         # perform object detection
         vehicle_imgs, vbbox, bbox = yolo.get_vehicle_imgs(frame, 750, 700)
+
+        # perform object tracking
+        tracked_vehicles_info, id_for_new_vehicle = obj_tracker.track_vehicle(obj_tracker.get_bbox_without_class(bbox))
+        for key in tracked_vehicles_info.keys():
+            _, centroid_x, centroid_y = tracked_vehicles_info[key]
+            try:
+                v_index = list(map(lambda obj: obj.id,tracked_vehicles)).index(key)
+                # vehicle is present in the current list of vehicles
+                vehicle = tracked_vehicles[v_index]
+
+            except ValueError: # vehicle is not found
+                vehicle = Vehicle(key)
+                tracked_vehicles.append(vehicle)
+
+            vehicle.current_bounding_box_centroid = (centroid_x, centroid_y)
+
+
 
         # height to width heuristic to remove partial images
         for vehicle_img in vehicle_imgs:
