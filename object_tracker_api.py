@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import os
-MAX_DIST = 200 # if the two objects provided are more than MAX_DIST, consider them different
+MAX_DIST = 2 # if the two objects provided are more than MAX_DIST, consider them different
 
 
 def check_if_close_enough(cx0, cy0, cx1, cy1):
@@ -10,7 +10,7 @@ def check_if_close_enough(cx0, cy0, cx1, cy1):
 
 # used to find which bounding box corresponds to the returned centroid on the same frame
 def check_exact_match(cx,cy, bbox):
-    cx1,cx2 = (bbox[2]-bbox[0]) / 2, (bbox[3]-bbox[1]) / 2
+    cx1,cx2 = (bbox[2]+bbox[0]) / 2, (bbox[3]+bbox[1]) / 2
     distance, _ = check_if_close_enough(cx,cy, cx1, cx2)
     if distance < 4: # empirical.. theoretically should be exactly 0
         return True
