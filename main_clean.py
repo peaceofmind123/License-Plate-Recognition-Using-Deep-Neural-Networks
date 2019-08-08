@@ -24,7 +24,7 @@ def main():
     tracked_vehicle_ids = []
     current_tracked_id = 0
     tracked_vehicles = [] # stores the actual vehicle object
-
+    vehicle = None
     # main loop
     while cap.isOpened():
         ret, frame = cap.read()
@@ -48,6 +48,9 @@ def main():
                 vehicle = tracked_vehicles[v_index]
 
             except ValueError as e: # vehicle is not found
+                if vehicle is not None: # here vehicle refers to the last detected vehicle
+                    vehicle.aggregate_ocr()
+                    print(vehicle.license_number)
                 vehicle = Vehicle(key)
                 tracked_vehicles.append(vehicle)
 
@@ -88,7 +91,10 @@ def main():
         # processing done, time for outputs
         # print(frame_no, ocr_outputs_this_frame)
         l = len(tracked_vehicles)
-        print(tracked_vehicles[l-1].license_number_predictions)
+        last_vehicle_lnum = tracked_vehicles[l-1].license_number
+        if len(last_vehicle_lnum) > 0:
+            print(last_vehicle_lnum)
+
         # create the frame to display
         frame = yolo.draw_bbox(frame, bbox)
         for v in tracked_vehicles:
