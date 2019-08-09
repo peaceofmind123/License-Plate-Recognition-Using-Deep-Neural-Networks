@@ -30,6 +30,7 @@ class App:
     def __init__(self, window, window_title='WINDOW_TITLE',video_source=VIDEO_SOURCE):
         self.window = window
         self.window_title = window_title
+        self.window.geometry('1920x1080')
         self.delay = FRAME_DELAY
 
         # open video
@@ -37,7 +38,29 @@ class App:
 
         # Create a canvas that can fit the above video source size
         self.canvas = tk.Canvas(window, width=1080, height=700)
-        self.canvas.pack()
+        self.canvas.pack(side=tk.LEFT, fill=tk.Y)
+        self.info_frame = tk.Frame(window,width=1920-1080, height=700)
+        self.label_vehicle_no = tk.Entry(self.info_frame, width=50)
+        self.vehicle_no = tk.Entry(self.info_frame, width=50)
+        self.vehicle_lp = tk.Entry(self.info_frame, width=50)
+        self.label_vehicle_lp = tk.Entry(self.info_frame, width=50)
+
+        self.label_vehicle_no.insert(0, 'Vehicle No.')
+        self.label_vehicle_lp.insert(0, 'Vehicle License Plate')
+
+        self.label_vehicle_no.config(state="readonly")
+        self.label_vehicle_lp.config(state="readonly")
+        self.vehicle_no.config(state="readonly")
+        self.vehicle_lp.config(state="readonly")
+
+        self.label_vehicle_no.grid(row=0, column=0,pady=5)
+        self.label_vehicle_lp.grid(row=0,column=1,pady=5)
+        self.vehicle_no.grid(row=1,column=0)
+        self.vehicle_lp.grid(row=1,column=1)
+
+
+        self.info_frame.pack(side=tk.LEFT,fill=tk.Y)
+
         self.update()
         self.window.mainloop()
 
