@@ -38,7 +38,7 @@ def main():
         # perform object tracking
         tracked_vehicles_info, id_for_new_vehicle = obj_tracker.track_vehicle(
             obj_tracker.get_bbox_without_class(bbox))
-        print(id_for_new_vehicle)
+
         # create or update the vehicles tracked till now
         for key in tracked_vehicles_info.keys():
             _, centroid_x, centroid_y = tracked_vehicles_info[key]
@@ -90,10 +90,7 @@ def main():
 
         # processing done, time for outputs
         # print(frame_no, ocr_outputs_this_frame)
-        l = len(tracked_vehicles)
-        last_vehicle_lnum = tracked_vehicles[l-1].license_number
-        if len(last_vehicle_lnum) > 0:
-            print(last_vehicle_lnum)
+
 
         # create the frame to display
         frame = yolo.draw_bbox(frame, bbox)

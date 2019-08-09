@@ -1,4 +1,4 @@
-
+import re
 class Vehicle:
 
     def __init__(self,id=0):
@@ -12,6 +12,15 @@ class Vehicle:
         self.bbox_current = None
         self.tokenized_lnums = []
 
+
+    def _is_number(self, num):
+        try:
+            int(num)
+            return True
+        except ValueError:
+            return False
+
+
     def tokenize_lnums(self):
         tokenized_lnums = []
 
@@ -21,45 +30,28 @@ class Vehicle:
         self.tokenized_lnums = tokenized_lnums
         return tokenized_lnums
 
+
     def aggregate_ocr(self):
-        max_size = 0
-        for i, l_num in enumerate(self.tokenize_lnums()):
-
-
-            # if the license number is empty reject it
-            if len(l_num) == 0 or (len(l_num) == 1 and len(l_num[0]) == 0):
-                self.tokenized_lnums.remove(l_num)
-                continue
-
-            # if the first symbol is numeric, reject the number
-            try:
-                first_symbol = int(l_num[0])
-                self.tokenized_lnums.remove(l_num)
-                continue
-            except Exception as e:
-                pass
-
-            # calculate max_size
-            max_size = max(max_size, len(l_num))
-
-
-        # initialize the best value aggregation set
-        best_values = [list() for i in range(max_size)]
-
-        #perform the aggregation
+        if len(self.license_number) > 0:
+            return self.license_number
+        self.clean_lnums()
+        best_values = dict()
         for i, l_num in enumerate(self.tokenized_lnums):
+            for j, symbol in enumerate(l_num):
+                try:
+                    best_values[j].append(symbol)
+                except KeyError:
+                    best_values[j] = []
+                    best_values[j].append(symbol)
 
-            for j, char in enumerate(l_num):
-                best_values[j].append(char)
-
-
-        for char_pos, b_val_list in enumerate(best_values):
+        for pos in best_values:
             count = dict()
-            for char in b_val_list:
-                if char in count.keys(): # if already present
-                    count[char] += 1 # increment count
+            values_of_pos = best_values[pos]
+            for char in values_of_pos:
+                if char in count.keys():
+                    count[char] += 1
                 else:
-                    count[char] = 1 # otherwise initialize count
+                    count[char] = 1
 
             max_val = max(count.values())
             optimum_char = list(count.keys())[list(count.values()).index(max_val)]
@@ -67,3 +59,21 @@ class Vehicle:
 
         return self.license_number
 
+    # initial cleaning code
+    def clean_lnums(self):
+
+        for i, lp_num in enumerate(self.license_number_predictions):
+
+            lp_num_no_str = "".join(lp_num.split())
+            matchObj = re.match(r'([a-zA-Z]+)([0-9]+)([a-zA-z]+)([0-9]+)', lp_num_no_str)
+            if not matchObj:
+                self.license_number_predictions.remove(lp_num)
+            else:
+                first_part = matchObj.group(1)
+                second_part = matchObj.group(2)
+                third_part = matchObj.group(3)
+                fourth_part = matchObj.group(4)
+                if len(first_part) > 3 or len(second_part)>2 or len(third_part)>3 or len(fourth_part)>4:
+                    self.license_number_predictions.remove(lp_num)
+
+        self.tokenize_lnums()
