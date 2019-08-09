@@ -1,4 +1,5 @@
 import re
+import copy
 class Vehicle:
 
     def __init__(self,id=0):
@@ -35,6 +36,7 @@ class Vehicle:
         if len(self.license_number) > 0:
             return self.license_number
         self.clean_lnums()
+
         best_values = dict()
         for i, l_num in enumerate(self.tokenized_lnums):
             for j, symbol in enumerate(l_num):
@@ -57,22 +59,39 @@ class Vehicle:
             optimum_char = list(count.keys())[list(count.values()).index(max_val)]
             self.license_number = self.license_number + optimum_char
 
+        matchObj = re.match(r'([a-zA-Z]+)([0-9]+)([a-zA-z]+)([0-9]+)', self.license_number)
+        try:
+            self.license_number = matchObj.group()
+        except:
+            self.license_number = ''
         return self.license_number
 
     # initial cleaning code
     def clean_lnums(self):
 
         for i, lp_num in enumerate(self.license_number_predictions):
-
+            flag = 0
             lp_num_no_str = "".join(lp_num.split())
+
             matchObj = re.match(r'([a-zA-Z]+)([0-9]+)([a-zA-z]+)([0-9]+)', lp_num_no_str)
             if not matchObj:
+
                 while True:
                     try:
                         self.license_number_predictions.remove(lp_num)
                     except Exception:
                         break
+
             else:
+                if matchObj.group() != lp_num_no_str:
+                    flag = 1
+                    while True:
+                        try:
+                            self.license_number_predictions.remove(lp_num)
+                        except Exception:
+                            break
+
+
                 first_part = matchObj.group(1)
                 second_part = matchObj.group(2)
                 third_part = matchObj.group(3)
