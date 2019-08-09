@@ -67,13 +67,20 @@ class Vehicle:
             lp_num_no_str = "".join(lp_num.split())
             matchObj = re.match(r'([a-zA-Z]+)([0-9]+)([a-zA-z]+)([0-9]+)', lp_num_no_str)
             if not matchObj:
-                self.license_number_predictions.remove(lp_num)
+                while True:
+                    try:
+                        self.license_number_predictions.remove(lp_num)
+                    except Exception:
+                        break
             else:
                 first_part = matchObj.group(1)
                 second_part = matchObj.group(2)
                 third_part = matchObj.group(3)
                 fourth_part = matchObj.group(4)
                 if len(first_part) > 3 or len(second_part)>2 or len(third_part)>3 or len(fourth_part)>4:
-                    self.license_number_predictions.remove(lp_num)
-
+                    while True:
+                        try:
+                            self.license_number_predictions.remove(lp_num)
+                        except Exception:
+                            break
         self.tokenize_lnums()
