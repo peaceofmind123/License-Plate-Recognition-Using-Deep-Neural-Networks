@@ -9,7 +9,7 @@ import os
 import object_tracker_api as obj_tracker
 from Vehicle import Vehicle
 import PIL.Image, PIL.ImageTk
-
+from tkinter import ttk
 VIDEO_SOURCE = '1.MOV'
 WINDOW_TITLE = 'License Plate Recognition'
 FRAME_DELAY = 15
@@ -40,30 +40,54 @@ class App:
         self.canvas = tk.Canvas(window, width=1080, height=700)
         self.canvas.pack(side=tk.LEFT, fill=tk.Y)
         self.info_frame = tk.Frame(window,width=1920-1080, height=700)
-        self.label_vehicle_no = tk.Entry(self.info_frame, width=50)
-        self.vehicle_no = tk.Entry(self.info_frame, width=50)
-        self.vehicle_lp = tk.Entry(self.info_frame, width=50)
-        self.label_vehicle_lp = tk.Entry(self.info_frame, width=50)
+
+        self.line_frames = []
+        self.vehicle_nos = []
+        self.vehicle_lps = []
+        self.buttons = []
+
+        self.label_frame = tk.Frame(self.info_frame)
+
+        self.label_vehicle_no = tk.Entry(self.label_frame, width=30)
+        self.label_vehicle_lp = tk.Entry(self.label_frame, width=30)
+        self.label_vehicle_details = ttk.Entry(self.label_frame,width=15)
 
         self.label_vehicle_no.insert(0, 'Vehicle No.')
         self.label_vehicle_lp.insert(0, 'Vehicle License Plate')
+        self.label_vehicle_details.insert(0, 'Actions')
 
         self.label_vehicle_no.config(state="readonly")
         self.label_vehicle_lp.config(state="readonly")
-        self.vehicle_no.config(state="readonly")
-        self.vehicle_lp.config(state="readonly")
+        self.label_vehicle_details.config(state="readonly")
 
         self.label_vehicle_no.grid(row=0, column=0,pady=5)
         self.label_vehicle_lp.grid(row=0,column=1,pady=5)
-        self.vehicle_no.grid(row=1,column=0)
-        self.vehicle_lp.grid(row=1,column=1)
-
+        self.label_vehicle_details.grid(row=0, column=2, pady=5)
+        self.label_frame.grid(row=0,column=0)
 
         self.info_frame.pack(side=tk.LEFT,fill=tk.Y)
 
         self.update()
         self.window.mainloop()
 
+
+    def _create_new_line(self):
+        line_frame = tk.Frame(self.info_frame)
+        vehicle_no = tk.Entry(line_frame, width=30)
+        vehicle_lp = tk.Entry(line_frame, width=30)
+        vehicle_action = ttk.Button(line_frame,width=15,text='View Details')
+
+        vehicle_no.grid(row=0, column=0)
+        vehicle_lp.grid(row=0, column=1)
+        vehicle_action.grid(row=0,column=2)
+        self.line_frames.append(line_frame)
+        self.vehicle_nos.append(vehicle_no)
+        self.vehicle_lps.append(vehicle_lp)
+        self.buttons.append(vehicle_action)
+
+        for line_frame in self.line_frames:
+            line_frame.grid(row=len(self.line_frames) - (self.line_frames.index(line_frame)), column=0, pady=5,
+                            sticky=tk.W)
     def update(self):
         # TODO: add core code here
         global frame_no, id_for_new_vehicle, tracked_vehicles_info, tracked_vehicle_ids, current_tracked_id,tracked_vehicles,vehicle
@@ -105,6 +129,11 @@ class App:
                     if vehicle is not None:  # here vehicle refers to the last detected vehicle
                         vehicle.aggregate_ocr()
                         print(vehicle.license_number)
+                        self._create_new_line()
+                        self.vehicle_nos[-1].insert(0,vehicle.id)
+                        self.vehicle_lps[-1].insert(0,vehicle.license_number)
+                        self.vehicle_nos[-1].config(state='readonly')
+                        self.vehicle_lps[-1].config(state='readonly')
                     vehicle = Vehicle(key)
                     tracked_vehicles.append(vehicle)
 
@@ -157,6 +186,7 @@ class App:
                     cx = int(v.current_bounding_box_centroid[0])
                     cy = int(v.current_bounding_box_centroid[1])
                     frame = cv2.putText(frame, f'{v.id}', (cx, cy), cv2.FONT_HERSHEY_COMPLEX, 4, (0, 255, 0), 4)
+
             # resize the frame for display
             frame = cv2.resize(frame, (1080, 700))
             # cv2.imshow("prediction", frame)
