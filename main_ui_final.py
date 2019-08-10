@@ -191,7 +191,7 @@ class App:
 
             for v in tracked_vehicles:
                 # perform lp localization
-                if v.id in vehicle_ids_this_frame:
+                if v.id in vehicle_ids_this_frame and (not v.is_completely_processed):
                     lp_imgs, lp_bboxes, frame = localizer.predict_license_plate([v.img_current], frame,
                                                                                 [v.bbox_current])
                     lp_img = lp_imgs[0]
