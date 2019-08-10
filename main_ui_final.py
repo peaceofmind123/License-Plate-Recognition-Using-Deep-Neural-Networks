@@ -32,7 +32,7 @@ class App:
         self.window_title = window_title
         self.window.geometry('1920x1080')
         self.delay = FRAME_DELAY
-
+        self.details_view = None
         # open video
         self.vid = MyVideoCapture(os.path.join(os.getcwd(),'video',video_source))
 
@@ -67,15 +67,52 @@ class App:
 
         self.info_frame.pack(side=tk.LEFT,fill=tk.Y)
 
+        # details view
+        self.details_canvas_vehicle = None
+        self.details_canvas_lp = None
+        self.details_label_vehicle = None
+        self.details_label_lp = None
+        if self.details_view is not None:
+            self.details_view.after(self.delay,self.details_update)
         self.update()
         self.window.mainloop()
 
+    def view_details(self, vehicle_id):
+        self.details_view = tk.Toplevel(self.window)
+        self.details_view.geometry('900x900')
+        self.details_canvas_vehicle = tk.Canvas(self.details_view, width=500, height=400)
+        self.details_canvas_lp = tk.Canvas(self.details_view, width=100, height=50)
+        self.details_label_vehicle = tk.Entry(self.details_view)
+        self.details_label_lp = tk.Entry(self.details_view)
 
-    def _create_new_line(self):
+        self.display_img = cv2.cvtColor(tracked_vehicles[vehicle_id].vehicle_imgs[-1], cv2.COLOR_BGRA2RGBA)
+        self.display_img = cv2.resize(self.display_img,(500,400))
+        self.detail_photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(self.display_img))
+        self.details_canvas_vehicle.create_image(0, 0, image=self.detail_photo, anchor=tk.NW)
+
+        self.display_img_lp = cv2.cvtColor(tracked_vehicles[vehicle_id].lp_imgs[-1], cv2.COLOR_BGRA2RGBA)
+        self.display_img_lp = cv2.resize(self.display_img_lp,(100,50))
+        self.detail_photo_lp = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(self.display_img_lp))
+        self.details_canvas_lp.create_image(0, 0, image=self.detail_photo_lp, anchor=tk.NW)
+
+        self.details_label_vehicle.grid(row=0, column=0, padx=5, pady=5)
+        self.details_label_lp.grid(row=0, column=1, padx=5, pady=5)
+
+        self.details_canvas_vehicle.grid(row=1,column=0, padx=5)
+        self.details_canvas_lp.grid(row=1,column=1)
+
+        self.details_label_vehicle.insert(0, 'Vehicle')
+        self.details_label_lp.insert(0, 'License Plate')
+
+
+        self.details_label_vehicle.config(state="readonly")
+        self.details_label_lp.config(state="readonly")
+
+    def _create_new_line(self,vehicle_id):
         line_frame = tk.Frame(self.info_frame)
         vehicle_no = tk.Entry(line_frame, width=30)
         vehicle_lp = tk.Entry(line_frame, width=30)
-        vehicle_action = ttk.Button(line_frame,width=15,text='View Details')
+        vehicle_action = ttk.Button(line_frame,width=15,text='View Details',command=lambda: self.view_details(vehicle_id))
 
         vehicle_no.grid(row=0, column=0)
         vehicle_lp.grid(row=0, column=1)
@@ -88,6 +125,9 @@ class App:
         for line_frame in self.line_frames:
             line_frame.grid(row=len(self.line_frames) - (self.line_frames.index(line_frame)), column=0, pady=5,
                             sticky=tk.W)
+
+    def details_update(self):
+        self.details_view.after(self.delay, self.details_update)
 
     def is_vehicle_unique(self,veh:Vehicle):
         ln = veh.license_number
@@ -174,7 +214,7 @@ class App:
                     vehicle.aggregate_ocr()
                     print(vehicle.license_number)
                     if vehicle.license_number != '' and self.is_vehicle_unique(vehicle):
-                        self._create_new_line()
+                        self._create_new_line(vehicle.id)
                         self.vehicle_nos[-1].insert(0, vehicle.id)
                         self.vehicle_lps[-1].insert(0, vehicle.license_number)
                         self.vehicle_nos[-1].config(state='readonly')
@@ -195,7 +235,9 @@ class App:
                     lp_imgs, lp_bboxes, frame = localizer.predict_license_plate([v.img_current], frame,
                                                                                 [v.bbox_current])
                     lp_img = lp_imgs[0]
+                    v.lp_imgs.append(lp_img)
                     lp_img = cv2.cvtColor(lp_img, cv2.COLOR_RGB2GRAY)
+
                     ocr_output = ocr.predict_ocr(lp_img)
                     v.license_number_predictions.append(ocr_output if ocr_output is not None else '')
                     ocr_outputs_this_frame.append(ocr_output)
