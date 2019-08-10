@@ -88,6 +88,24 @@ class App:
         for line_frame in self.line_frames:
             line_frame.grid(row=len(self.line_frames) - (self.line_frames.index(line_frame)), column=0, pady=5,
                             sticky=tk.W)
+
+    def is_vehicle_unique(self,veh:Vehicle):
+        ln = veh.license_number
+        lns = [v.license_number for v in tracked_vehicles]
+        lns_inst = [1 for l in lns if l == ln]
+
+        if sum(lns_inst) > 1:
+            return False
+        return True
+
+    def is_vehicle_out_of_frame(self,veh:Vehicle):
+        if veh is not None and veh.bbox_current is not None:
+            x1,y1,x2,y2 = veh.bbox_current
+            if x1 <= 0 or y1 <= 0 or x2 >= 1920 or y2 >= 1080:
+                return True
+            return False
+        return None
+
     def update(self):
         # TODO: add core code here
         global frame_no, id_for_new_vehicle, tracked_vehicles_info, tracked_vehicle_ids, current_tracked_id,tracked_vehicles,vehicle
@@ -126,14 +144,8 @@ class App:
                     vehicle = tracked_vehicles[v_index]
 
                 except ValueError as e:  # vehicle is not found
-                    if vehicle is not None:  # here vehicle refers to the last detected vehicle
-                        vehicle.aggregate_ocr()
-                        print(vehicle.license_number)
-                        self._create_new_line()
-                        self.vehicle_nos[-1].insert(0,vehicle.id)
-                        self.vehicle_lps[-1].insert(0,vehicle.license_number)
-                        self.vehicle_nos[-1].config(state='readonly')
-                        self.vehicle_lps[-1].config(state='readonly')
+                    # if vehicle is not None:  # here vehicle refers to the last detected vehicle
+
                     vehicle = Vehicle(key)
                     tracked_vehicles.append(vehicle)
 
@@ -156,6 +168,18 @@ class App:
                 if vehicle.img_current is None or vehicle.bbox_current is None:
                     tracked_vehicles.remove(vehicle)
 
+                if self.is_vehicle_out_of_frame(vehicle) is None:
+                    pass
+                elif self.is_vehicle_out_of_frame(vehicle) and (not vehicle.is_completely_processed):
+                    vehicle.aggregate_ocr()
+                    print(vehicle.license_number)
+                    if vehicle.license_number != '' and self.is_vehicle_unique(vehicle):
+                        self._create_new_line()
+                        self.vehicle_nos[-1].insert(0, vehicle.id)
+                        self.vehicle_lps[-1].insert(0, vehicle.license_number)
+                        self.vehicle_nos[-1].config(state='readonly')
+                        self.vehicle_lps[-1].config(state='readonly')
+                    vehicle.is_completely_processed = True
             if len(tracked_vehicles) == 0:  # if no vehicle was detected, just skip
                 frame_no += 1
                 frame = cv2.resize(frame, (1080, 700))

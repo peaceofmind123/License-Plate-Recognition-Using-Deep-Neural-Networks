@@ -12,7 +12,7 @@ class Vehicle:
         self.bboxes = []
         self.bbox_current = None
         self.tokenized_lnums = []
-
+        self.is_completely_processed = False
 
     def _is_number(self, num):
         try:
