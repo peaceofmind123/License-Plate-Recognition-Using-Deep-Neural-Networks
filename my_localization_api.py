@@ -84,7 +84,7 @@ class FinalTransform:
 model = None
 
 
-def load_model(saved_dir='saved_states/model_state_v0.pth', CUDA=False):
+def load_model(saved_dir='model_state_v0.pth', CUDA=False):
     global model
     print("Loading LP-Localization network.....")
     model = models.resnet18(pretrained=True)
@@ -101,7 +101,7 @@ def load_model(saved_dir='saved_states/model_state_v0.pth', CUDA=False):
     model.fc = nn.Linear(num_feature, num_output)
     model = model.cpu()
     model.load_state_dict(torch.load(
-        saved_dir, map_location='cuda' if CUDA else 'cpu'))
+        os.path.join(os.getcwd(),"saved_states",saved_dir), map_location='cuda' if CUDA else 'cpu'))
     model.eval()
     print("Network successfully loaded")
     return model

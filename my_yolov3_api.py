@@ -7,13 +7,13 @@ import cv2
 import pickle as pkl
 import random
 
-cfgFileName: str = 'data/yolov3.cfg'
-weightsFileName: str = 'data/yolov3.weights'  # download from : https://pjreddie.com/media/files/yolov3.weights
+cfgFileName: str = 'yolov3.cfg'
+weightsFileName: str = 'yolov3.weights'  # download from : https://pjreddie.com/media/files/yolov3.weights
 imageHeight: int = 416
 imgsize: tuple = (imageHeight, imageHeight)
 minConfidence: float = 0.6  # 0.5
 nms_conf: float = 0.6  # 0.4
-colors: list = pkl.load(open("data/pallete", "rb"))
+colors: list = pkl.load(open(os.path.join(os.getcwd(),"data","pallete"), "rb"))
 SCREEN_WIDTH = 1920
 
 def load_classes(namesfile):
@@ -22,7 +22,7 @@ def load_classes(namesfile):
     return names
 
 
-classes: list = load_classes("data/coco.names")
+classes: list = load_classes(os.path.join(os.getcwd(),"data","coco.names"))
 # classes:list = ['car','motorbike','bus','truck',]
 # vehicle_names:list = ['car','motorbike','bus','truck',]
 # vehicles:list = [2,3,5,7,]
@@ -39,9 +39,9 @@ device = torch.device("cuda:0" if CUDA else "cpu")
 def load_model():
     global model
     print("Loading YOLOv3 network.....")
-    model = Darknet(cfgFileName)
+    model = Darknet(os.path.join(os.getcwd(),'cfg',cfgFileName))
 
-    model.load_weights(weightsFileName)
+    model.load_weights(os.path.join(os.getcwd(),'data',weightsFileName))
     print("Network successfully loaded")
 
     model.net_info["height"] = str(imageHeight)
