@@ -6,3 +6,4 @@ lp_*/
 video/
 .idea/
 data/yolov3.weights
+__pycache__/
