@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import filedialog
 import Yolo_high as yolo
 import localizer_high as localizer
 import ocr_api as ocr
@@ -33,13 +34,17 @@ class App:
         self.window.geometry('1920x1080')
         self.delay = FRAME_DELAY
         self.details_view = None
+        self.video_fname = video_source
         # open video
-        self.vid = MyVideoCapture(os.path.join(os.getcwd(),'video',video_source))
+        self.vid = None
 
         # Create a canvas that can fit the above video source size
-        self.canvas = tk.Canvas(window, width=1080, height=700)
-        self.canvas.pack(side=tk.LEFT, fill=tk.Y)
+        self.canvas = tk.Canvas(window, width=1080, height=700,borderwidth=1,relief=tk.RIDGE,
+                                background="beige")
+        self.canvas.grid(row=0,column=0)
         self.info_frame = tk.Frame(window,width=1920-1080, height=700)
+        self.upload_video_btn = ttk.Button(window,text="Upload Video",command=self.upload_new_video)
+
 
         self.line_frames = []
         self.vehicle_nos = []
@@ -65,8 +70,8 @@ class App:
         self.label_vehicle_details.grid(row=0, column=2, pady=5)
         self.label_frame.grid(row=0,column=0)
 
-        self.info_frame.pack(side=tk.LEFT,fill=tk.Y)
-
+        self.info_frame.grid(row=0,column=1,sticky=tk.N)
+        self.upload_video_btn.grid(row=1, column=0,sticky=tk.S,pady=10)
         # details view
         self.details_canvas_vehicle = None
         self.details_canvas_lp = None
@@ -77,6 +82,10 @@ class App:
         self.update()
         self.window.mainloop()
 
+    def upload_new_video(self):
+        self.video_fname = filedialog.askopenfilename(title='Select Video',
+                                                      filetypes=(("video files","*.mp4 *.mov *.avi *.MP4 *.MOV *.AVI"),("all files","*.*")))
+        self.vid = MyVideoCapture(self.video_fname)
     def view_details(self, vehicle_id):
         self.details_view = tk.Toplevel(self.window)
         self.details_view.geometry('900x900')
@@ -150,6 +159,9 @@ class App:
         # TODO: add core code here
         global frame_no, id_for_new_vehicle, tracked_vehicles_info, tracked_vehicle_ids, current_tracked_id,tracked_vehicles,vehicle
         flag = 0
+        if self.vid is None:
+            return self.window.after(self.delay, self.update)
+
         ret, frame = self.vid.get_frame()
         # if frame_no % 1 != 0:
         #     frame_no += 1
